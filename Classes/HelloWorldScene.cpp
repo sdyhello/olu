@@ -287,17 +287,21 @@ void HelloWorld::createCup()
     cupDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.1);
     m_cupBody = m_world->CreateBody(&cupDef);
     
+    float width_1 = 6.0f;
+    float width_2 = 4.0f;
+    float height_1 = 8.0f;
+    float height_2 = 1.0f;
     
     b2Vec2 vs[9];
     vs[0].Set(0.0f, 0.0f);
-    vs[1].Set(-3.0f, 0.0f);
-    vs[2].Set(-3.0f, 8.0f);
-    vs[3].Set(-2.0f, 8.0f);
-    vs[4].Set(-2.0f, 1.0f);
-    vs[5].Set(2.0f, 1.0f);
-    vs[6].Set(2.0f, 8.0f);
-    vs[7].Set(3.0f, 8.0f);
-    vs[8].Set(3.0f, 0.0f);
+    vs[1].Set(-width_1 / 2, 0.0f);
+    vs[2].Set(-width_1 / 2, height_1);
+    vs[3].Set(-width_2 / 2, height_1);
+    vs[4].Set(-width_2 / 2, height_2);
+    vs[5].Set(width_2 / 2, height_2);
+    vs[6].Set(width_2 / 2, height_1);
+    vs[7].Set(width_1 / 2, height_1);
+    vs[8].Set(width_1 / 2, 0.0f);
     
     b2ChainShape shape;
     shape.CreateLoop(vs, 9);

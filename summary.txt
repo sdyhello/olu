@@ -32,3 +32,7 @@
 	2、创建b2ChainShape类
 	3、利用CreateLoop创建
 	4、用夹具生成
+
+一些坑：
+	1、setAsBox，参数为长或宽的一半
+
