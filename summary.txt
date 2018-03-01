@@ -1,0 +1,34 @@
+一、创建世界
+	1、定义重力
+	2、通过b2World创建世界
+二、创建形体
+	1、物体定义
+	2、创建物体
+	3、形体定义
+	4、利用body创建夹具来生成形体
+	5、若要添加更多属性，如密度，摩擦等，需要添加夹具定义
+三、sprite跟随物理世界的物体移动
+	1、创建sprite
+	2、创建body
+	3、SetUserData
+	4、update中循环遍历，如果sprite存在，则设置其位置和旋转
+四、sensor的运用
+	1、创建普通body
+	2、设置夹具属性 isSensor = true
+	3、在update中遍历，如果接触物中有sensor的body，则接触
+五、旋转角度的设置
+	说明：已经一个normal，如何求sprite该转多少度？
+	1、通过getNormalLized()获取normal
+	2、normal.getAngle()获取孤度
+	3、CC_RADIANS_TO_DEGREES获取角度
+	4、sprite设置旋转
+六、调出调试绘图线
+	1、添加GLES-Render类
+	2、创建GLESDebugDraw类
+	3、用world设置该实例
+	4、重写Layer draw类，并在其中调用world的DrawDebugData()；
+七、创建多边形
+	1、定义顶点数组
+	2、创建b2ChainShape类
+	3、利用CreateLoop创建
+	4、用夹具生成
