@@ -45,7 +45,7 @@ public:
     
     void startUpdate();
     
-    void createCup();
+    void createCup(float half_width, float height, int posX);
     
     void createMenuItem(cocos2d::Scene *scene);
     
@@ -57,7 +57,7 @@ public:
     
     void delayRun(float dt);
     
-    void createSensorBody();
+    void createSensorBody(float width, float height, int posX);
     
     void createArrow();
     

@@ -168,7 +168,7 @@ void HelloWorld::initPhysicsWorld()
     this->createPhysicsEdge();
     this->createPencil();
     this->createEraser();
-    this->createCup();
+    this->createCup(4.0f, 6.0f, 500);
     
 }
 
@@ -273,12 +273,10 @@ void HelloWorld::createArrow()
     m_arrowSprite->setPosition(Vec2(m_size.width/2 - 50, 30));
 }
 
-void HelloWorld::createCup()
+void HelloWorld::createCup(float width, float height, int posX)
 {
-    int posX = 500;
-    
     auto cupSprite = Sprite::create("cup.png");
-    this->addChild(cupSprite);
+    //this->addChild(cupSprite);
     cupSprite->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
     cupSprite->setPosition((borderScale * m_size.width - posX), 0.1 * PTM_RATIO);
     
@@ -287,39 +285,35 @@ void HelloWorld::createCup()
     cupDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.1);
     m_cupBody = m_world->CreateBody(&cupDef);
     
-    float width_1 = 6.0f;
-    float width_2 = 4.0f;
-    float height_1 = 8.0f;
-    float height_2 = 1.0f;
+    float thickness = 0.5f;
     
     b2Vec2 vs[9];
     vs[0].Set(0.0f, 0.0f);
-    vs[1].Set(-width_1 / 2, 0.0f);
-    vs[2].Set(-width_1 / 2, height_1);
-    vs[3].Set(-width_2 / 2, height_1);
-    vs[4].Set(-width_2 / 2, height_2);
-    vs[5].Set(width_2 / 2, height_2);
-    vs[6].Set(width_2 / 2, height_1);
-    vs[7].Set(width_1 / 2, height_1);
-    vs[8].Set(width_1 / 2, 0.0f);
+    vs[1].Set(-width / 2, 0.0f);
+    vs[2].Set(-width / 2, height);
+    vs[3].Set(-width / 2 + thickness, height);
+    vs[4].Set(-width / 2 + thickness, 0.0f + thickness);
+    vs[5].Set(width / 2 - thickness, 0.0f + thickness);
+    vs[6].Set(width / 2 - thickness, height);
+    vs[7].Set(width / 2, height);
+    vs[8].Set(width / 2, 0.0f);
     
     b2ChainShape shape;
     shape.CreateLoop(vs, 9);
     m_cupBody->CreateFixture(&shape, 0.0f);
     
-    this->createSensorBody();
+    this->createSensorBody(width, height, posX);
 }
 
-void HelloWorld::createSensorBody()
+void HelloWorld::createSensorBody(float width, float height, int posX)
 {
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
-    int posX = 500;
-    bodyDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 3);
+    bodyDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.5f);
     m_sensorBody = m_world->CreateBody(&bodyDef);
     
     b2PolygonShape shape;
-    shape.SetAsBox(1.8f, 1.8f);
+    shape.SetAsBox((width - 1) / 2, (height - 1)/ 2);
     
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &shape;
