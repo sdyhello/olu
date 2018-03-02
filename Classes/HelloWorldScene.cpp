@@ -207,11 +207,11 @@ void HelloWorld::createPhysicsEdge()
     
     auto bookSprite = Sprite::create("book.png");
     auto spriteSize = bookSprite->getContentSize();
-    bookSprite->setPosition(Vec2(size.width/2, 48));
+    bookSprite->setPosition(Vec2(size.width/2, spriteSize.height / 2));
     this->addChild(bookSprite);
     
     b2PolygonShape polygonShape;
-    polygonShape.SetAsBox(spriteSize.width / 2 / PTM_RATIO, spriteSize.height/ 2 / PTM_RATIO, b2Vec2(size.width/2/PTM_RATIO, 1.5f), 0);
+    polygonShape.SetAsBox(spriteSize.width / 2 / PTM_RATIO, spriteSize.height/ 2 / PTM_RATIO, b2Vec2(size.width/2/PTM_RATIO, spriteSize.height / 2 / PTM_RATIO), 0);
     groundBody->CreateFixture(&polygonShape, 0);
 }
 
@@ -309,7 +309,7 @@ void HelloWorld::createSensorBody(float width, float height, int posX)
 {
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
-    bodyDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.5f);
+    bodyDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.5f + (height - 1) / 2);
     m_sensorBody = m_world->CreateBody(&bodyDef);
     
     b2PolygonShape shape;
