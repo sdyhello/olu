@@ -7,3 +7,4 @@ proj.android
 proj.win10
 proj.win8.1-universal
 .DS_Store
+.idea

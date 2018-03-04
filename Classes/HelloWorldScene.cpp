@@ -20,17 +20,20 @@ Scene* HelloWorld::createScene()
 void HelloWorld::createBackGround()
 {
     auto visibleSize = Director::getInstance()->getVisibleSize();
+	auto node_1 = Node::create();
+	this->addChild(node_1);
+
+	auto deskSprite_1 = Sprite::create("desk.jpg");
+	deskSprite_1->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+	deskSprite_1->setPosition(Vec2(0, 0));
+	node_1->addChild(deskSprite_1);
     
-    auto colorLayer_1 = LayerGradient::create(Color4B(0x7E, 0xC0, 0xEE, 255), Color4B(0x7C, 0xCD, 0x7C, 255));
-    colorLayer_1->setContentSize(Size(visibleSize.width, visibleSize.height * borderScale * 2));
-    colorLayer_1->setPosition(Vec2(0,0));
-    this->addChild(colorLayer_1, -1);
+	auto deskSprite_2 = Sprite::create("desk.jpg", 
+		Rect(0, 0, visibleSize.width * borderScale - deskSprite_1->getContentSize().width, deskSprite_1->getContentSize().height));
+	deskSprite_2->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+	deskSprite_2->setPosition(Vec2(deskSprite_1->getContentSize().width, 0));
+	node_1->addChild(deskSprite_2);
     
-    auto colorLayer_2 = LayerGradient::create(Color4B(0xB0, 0xC4, 0xDE, 255), Color4B(0x9B, 0xCD, 0x9B, 255));
-    colorLayer_2->setContentSize(Size(visibleSize.width, visibleSize.height * borderScale * 2));
-    colorLayer_2->setPosition(Vec2(visibleSize.width, 0));
-    colorLayer_2->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-    this->addChild(colorLayer_2, -1);
 }
 
 void HelloWorld::startUpdate()
@@ -64,14 +67,14 @@ bool HelloWorld::init()
     }
     scheduleOnce(CC_SCHEDULE_SELECTOR(HelloWorld::delayRun), 0);
     
-    //this->createBackGround();
+    this->createBackGround();
     this->initPhysicsWorld();
     
     setTouchEnabled(true);
     setTouchMode(Touch::DispatchMode::ONE_BY_ONE);
     
-    //this->scanGameUI();
-    this->setPosition(Vec2(-(borderScale * m_size.width - m_size.width/4*3), 0));
+    this->scanGameUI();
+    //this->setPosition(Vec2(-(borderScale * m_size.width - m_size.width/4*3), 0));
     return true;
 }
 
@@ -191,16 +194,17 @@ void HelloWorld::createPhysicsEdge()
     
     auto size = Director::getInstance()->getVisibleSize();
     b2EdgeShape groundBox;
+	b2FixtureDef fixtureDef;
     //bottom
     groundBox.Set(b2Vec2(0, 10/PTM_RATIO), b2Vec2(size.width * borderScale/PTM_RATIO, 10/PTM_RATIO));
-    groundBody->CreateFixture(&groundBox, 0);
+	groundBody->CreateFixture(&groundBox, 0);
     //left
     groundBox.Set(b2Vec2(0, 10/PTM_RATIO), b2Vec2(0, size.height * borderScale * 2/PTM_RATIO));
     groundBody->CreateFixture(&groundBox, 0);
     //right
     groundBox.Set(b2Vec2(size.width * borderScale/PTM_RATIO, 10/PTM_RATIO), 
 		b2Vec2(size.width * borderScale/PTM_RATIO, size.height * borderScale * 2/PTM_RATIO));
-    groundBody->CreateFixture(&groundBox, 0);
+	groundBody->CreateFixture(&groundBox, 0);
     //top
     groundBox.Set(b2Vec2(0, size.height * borderScale * 2 / PTM_RATIO), 
 		b2Vec2(size.width * borderScale/PTM_RATIO, size.height * borderScale * 2/PTM_RATIO));
@@ -236,7 +240,7 @@ void HelloWorld::createPencil()
     b2FixtureDef pencilFixtureDef;
     pencilFixtureDef.shape = &pencilShape;
     pencilFixtureDef.density = 1.0f;
-    pencilFixtureDef.friction = 1.0f;
+    pencilFixtureDef.friction = 0.3f;
     m_pencilBody->CreateFixture(&pencilFixtureDef);
 }
 
@@ -276,14 +280,14 @@ void HelloWorld::createArrow()
 
 void HelloWorld::createCup(float width, float height, int posX, float thickness)
 {
-	auto spriteSize = 100.0f;
+	
     auto cupLeft = Sprite::create("cup.png");
-	log("%f", (height - thickness) * PTM_RATIO / spriteSize);
+	auto spriteSize = cupLeft->getContentSize().width;
+
 	cupLeft->setScaleY(height * PTM_RATIO / spriteSize);
 	cupLeft->setScaleX(thickness * PTM_RATIO / spriteSize);
 	cupLeft->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
 	cupLeft->setPosition(Vec2(-width * PTM_RATIO / 2, 0));
-	log("size:%f, %f", cupLeft->getContentSize().width, cupLeft->getContentSize().height);
 
 	auto cupRight = Sprite::create("cup.png");
 	cupRight->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
