@@ -4,3 +4,6 @@ proj.android-studio
 proj.win32
 proj.linux
 proj.android
+proj.win10
+proj.win8.1-universal
+.DS_Store

@@ -1,5 +1,4 @@
 #include "HelloWorldScene.h"
-#include "SimpleAudioEngine.h"
 
 USING_NS_CC;
 
@@ -23,12 +22,12 @@ void HelloWorld::createBackGround()
     auto visibleSize = Director::getInstance()->getVisibleSize();
     
     auto colorLayer_1 = LayerGradient::create(Color4B(0x7E, 0xC0, 0xEE, 255), Color4B(0x7C, 0xCD, 0x7C, 255));
-    colorLayer_1->setContentSize(visibleSize);
+    colorLayer_1->setContentSize(Size(visibleSize.width, visibleSize.height * borderScale * 2));
     colorLayer_1->setPosition(Vec2(0,0));
     this->addChild(colorLayer_1, -1);
     
     auto colorLayer_2 = LayerGradient::create(Color4B(0xB0, 0xC4, 0xDE, 255), Color4B(0x9B, 0xCD, 0x9B, 255));
-    colorLayer_2->setContentSize(visibleSize);
+    colorLayer_2->setContentSize(Size(visibleSize.width, visibleSize.height * borderScale * 2));
     colorLayer_2->setPosition(Vec2(visibleSize.width, 0));
     colorLayer_2->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
     this->addChild(colorLayer_2, -1);
@@ -71,15 +70,15 @@ bool HelloWorld::init()
     setTouchEnabled(true);
     setTouchMode(Touch::DispatchMode::ONE_BY_ONE);
     
-    this->scanGameUI();
-    //this->setPosition(Vec2(-(borderScale * m_size.width - m_size.width/4*3), 0));
+    //this->scanGameUI();
+    this->setPosition(Vec2(-(borderScale * m_size.width - m_size.width/4*3), 0));
     return true;
 }
 
 void HelloWorld::focusPencil()
 {
     auto size = Director::getInstance()->getVisibleSize();
-    b2Vec2 pencilPos = m_pencilBody->GetPosition();
+	b2Vec2 pencilPos = m_pencilBody->GetPosition();
     Vec2 uiPos = Vec2(pencilPos.x * PTM_RATIO, pencilPos.y * PTM_RATIO);
 //    log("pencilPos:%f, %f", uiPos.x, uiPos.y);
     float disPosX = uiPos.x - size.width/2;
@@ -118,7 +117,7 @@ void HelloWorld::update(float dt)
             
             b2Body * bodyA = fixtureA->GetBody();
             b2Body * bodyB = fixtureB->GetBody();
-            
+
             if (bodyA == m_sensorBody || bodyB == m_sensorBody){
                 m_hasWon = true;
                 this->goodLuck();
@@ -168,7 +167,7 @@ void HelloWorld::initPhysicsWorld()
     this->createPhysicsEdge();
     this->createPencil();
     this->createEraser();
-    this->createCup(4.0f, 6.0f, 500);
+    this->createCup(3.0f, 5.0f, 500, 0.5f);
     
 }
 
@@ -196,13 +195,15 @@ void HelloWorld::createPhysicsEdge()
     groundBox.Set(b2Vec2(0, 10/PTM_RATIO), b2Vec2(size.width * borderScale/PTM_RATIO, 10/PTM_RATIO));
     groundBody->CreateFixture(&groundBox, 0);
     //left
-    groundBox.Set(b2Vec2(0, 10/PTM_RATIO), b2Vec2(0, size.height * borderScale/PTM_RATIO));
+    groundBox.Set(b2Vec2(0, 10/PTM_RATIO), b2Vec2(0, size.height * borderScale * 2/PTM_RATIO));
     groundBody->CreateFixture(&groundBox, 0);
     //right
-    groundBox.Set(b2Vec2(size.width * borderScale/PTM_RATIO, 10/PTM_RATIO), b2Vec2(size.width * borderScale/PTM_RATIO, size.height * borderScale/PTM_RATIO));
+    groundBox.Set(b2Vec2(size.width * borderScale/PTM_RATIO, 10/PTM_RATIO), 
+		b2Vec2(size.width * borderScale/PTM_RATIO, size.height * borderScale * 2/PTM_RATIO));
     groundBody->CreateFixture(&groundBox, 0);
     //top
-    groundBox.Set(b2Vec2(0, size.height * borderScale/PTM_RATIO), b2Vec2(size.width * borderScale/PTM_RATIO, size.height * borderScale/PTM_RATIO));
+    groundBox.Set(b2Vec2(0, size.height * borderScale * 2 / PTM_RATIO), 
+		b2Vec2(size.width * borderScale/PTM_RATIO, size.height * borderScale * 2/PTM_RATIO));
     groundBody->CreateFixture(&groundBox, 0);
     
     auto bookSprite = Sprite::create("book.png");
@@ -273,19 +274,40 @@ void HelloWorld::createArrow()
     m_arrowSprite->setPosition(Vec2(m_size.width/2 - 50, 30));
 }
 
-void HelloWorld::createCup(float width, float height, int posX)
+void HelloWorld::createCup(float width, float height, int posX, float thickness)
 {
-    auto cupSprite = Sprite::create("cup.png");
-    //this->addChild(cupSprite);
-    cupSprite->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
-    cupSprite->setPosition((borderScale * m_size.width - posX), 0.1 * PTM_RATIO);
+	auto spriteSize = 100.0f;
+    auto cupLeft = Sprite::create("cup.png");
+	log("%f", (height - thickness) * PTM_RATIO / spriteSize);
+	cupLeft->setScaleY(height * PTM_RATIO / spriteSize);
+	cupLeft->setScaleX(thickness * PTM_RATIO / spriteSize);
+	cupLeft->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+	cupLeft->setPosition(Vec2(-width * PTM_RATIO / 2, 0));
+	log("size:%f, %f", cupLeft->getContentSize().width, cupLeft->getContentSize().height);
+
+	auto cupRight = Sprite::create("cup.png");
+	cupRight->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
+	cupRight->setScaleY(height * PTM_RATIO / spriteSize);
+	cupRight->setScaleX(thickness * PTM_RATIO / spriteSize);
+	cupRight->setPosition(Vec2(width * PTM_RATIO / 2, 0));
+	
+	auto cupBottom = Sprite::create("cup.png");
+	cupBottom->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+	cupBottom->setScaleY(thickness * PTM_RATIO / spriteSize);
+	cupBottom->setScaleX((width - thickness)* PTM_RATIO / spriteSize);
+
+	auto cupNode = Node::create();
+	cupNode->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+	cupNode->addChild(cupLeft);
+	this->addChild(cupNode);
+	cupNode->addChild(cupRight);
+	cupNode->addChild(cupBottom);
+	cupNode->setPosition((borderScale * m_size.width - posX), 0.1f * PTM_RATIO);
     
     b2BodyDef cupDef;
     //left
-    cupDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.1);
+    cupDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.1f);
     m_cupBody = m_world->CreateBody(&cupDef);
-    
-    float thickness = 0.5f;
     
     b2Vec2 vs[9];
     vs[0].Set(0.0f, 0.0f);
@@ -302,18 +324,19 @@ void HelloWorld::createCup(float width, float height, int posX)
     shape.CreateLoop(vs, 9);
     m_cupBody->CreateFixture(&shape, 0.0f);
     
-    this->createSensorBody(width, height, posX);
+    this->createSensorBody(width, height, posX, thickness);
 }
 
-void HelloWorld::createSensorBody(float width, float height, int posX)
+void HelloWorld::createSensorBody(float width, float height, int posX, float thickness)
 {
+
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
-    bodyDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, 0.5f + (height - 1) / 2);
+	bodyDef.position.Set((borderScale * m_size.width - posX) / PTM_RATIO, thickness + (height - thickness) / 2 / 2 * 0.7);
     m_sensorBody = m_world->CreateBody(&bodyDef);
     
     b2PolygonShape shape;
-    shape.SetAsBox((width - 1) / 2, (height - 1)/ 2);
+	shape.SetAsBox((width - thickness * 2) / 2 * 0.5, (height - thickness * 2) / 2 / 2 * 0.5);
     
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &shape;
