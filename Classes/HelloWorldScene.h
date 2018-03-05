@@ -62,6 +62,8 @@ public:
     void createArrow();
     
     void goodLuck();
+
+	void initSlingshot();
 private:
     b2World *m_world;
     GLESDebugDraw *m_debugDraw;
@@ -76,6 +78,12 @@ private:
     bool m_hasWon;
     cocos2d::Sprite * m_arrowSprite;
     cocos2d::Label * m_goodLuck;
+	int birdIndex;
+	cocos2d::DrawNode * m_drawNode_1;
+	cocos2d::DrawNode * m_drawNode_2;
+	cocos2d::Sprite * m_leftShot;
+	cocos2d::Sprite * m_rightShot;
+	bool m_isShot;
 };
 
 #endif // __HELLOWORLD_SCENE_H__

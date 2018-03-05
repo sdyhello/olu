@@ -7,6 +7,7 @@ HelloWorld::HelloWorld(){
     m_size = Director::getInstance()->getVisibleSize();
     m_hasWon = false;
     m_goodLuck = nullptr;
+	m_isShot = false;
 }
 
 Scene* HelloWorld::createScene()
@@ -74,6 +75,7 @@ bool HelloWorld::init()
     setTouchMode(Touch::DispatchMode::ONE_BY_ONE);
     
     this->scanGameUI();
+	this->initSlingshot();
     //this->setPosition(Vec2(-(borderScale * m_size.width - m_size.width/4*3), 0));
     return true;
 }
@@ -81,8 +83,12 @@ bool HelloWorld::init()
 void HelloWorld::focusPencil()
 {
     auto size = Director::getInstance()->getVisibleSize();
-	b2Vec2 pencilPos = m_pencilBody->GetPosition();
-    Vec2 uiPos = Vec2(pencilPos.x * PTM_RATIO, pencilPos.y * PTM_RATIO);
+	b2Vec2 focusPos;
+	if (m_isShot)
+		focusPos = m_pencilBody->GetPosition();
+	else
+		focusPos = m_eraser->GetPosition();
+	Vec2 uiPos = Vec2(focusPos.x * PTM_RATIO, focusPos.y * PTM_RATIO);
 //    log("pencilPos:%f, %f", uiPos.x, uiPos.y);
     float disPosX = uiPos.x - size.width/2;
     float disPosY = uiPos.y - size.height/4;
@@ -106,7 +112,7 @@ void HelloWorld::update(float dt)
             sprite->setRotation(-1 * CC_RADIANS_TO_DEGREES(b->GetAngle()));
         }
     }
-    this->focusPencil();
+    //this->focusPencil();
     
     auto erasePos = m_eraser->GetTransform().p;
     m_arrowSprite->setPosition(Vec2(erasePos.x * PTM_RATIO, erasePos.y * PTM_RATIO));
@@ -134,27 +140,117 @@ void HelloWorld::update(float dt)
 
 bool HelloWorld::onTouchBegan(cocos2d::Touch *touch, cocos2d::Event *event)
 {
-    touchBeginPos = touch->getLocation();
-    return true;
+	touchBeginPos = touch->getLocation();
+	touchBeginPos = touchBeginPos - this->getPosition();
+	log("touch pos:%f, %f", touchBeginPos.x, touchBeginPos.y);
+	auto spbird = Sprite::create("eraser.png");
+
+	spbird->setTag(200 + birdIndex);
+
+	this->addChild(spbird);
+
+	spbird->setPosition(touchBeginPos);
+
+	birdIndex++;
+
+	m_drawNode_1->setVisible(true);
+	m_drawNode_2->setVisible(true);
+	m_drawNode_1->clear();
+	m_drawNode_2->clear();
+
+	m_drawNode_1->drawSegment(Vec2(m_leftShot->getPosition().x - 20, m_leftShot->getPosition().y + m_leftShot->getContentSize().height),
+		spbird->getPosition(), 4, Color4F(255, 255, 255, 1));
+
+
+	m_drawNode_2->drawSegment(Vec2(m_rightShot->getPosition().x + 20, m_rightShot->getPosition().y + m_rightShot->getContentSize().height),
+		spbird->getPosition(), 4, Color4F(255, 255, 255, 1));
+
+
+	return true;
 }
 
 void HelloWorld::onTouchMoved(cocos2d::Touch *touch, cocos2d::Event *event)
 {
-    auto curPos = touch->getLocation();
+   /* auto curPos = touch->getLocation();
     auto diff = touchBeginPos - curPos;
     auto normal = diff.getNormalized();
     auto radians = normal.getAngle();
     auto degrees = CC_RADIANS_TO_DEGREES(radians);
-    m_arrowSprite->setRotation(-degrees);
+    m_arrowSprite->setRotation(-degrees);*/
+	auto bird = this->getChildByTag(200 + birdIndex - 1);
+
+	auto touchEndPos = touch->getLocation();
+	touchEndPos = touchEndPos - this->getPosition();
+	bird->setPosition(touchEndPos);
+
+
+	m_drawNode_1->clear();
+
+	m_drawNode_2->clear();
+
+	m_drawNode_1->drawSegment(Vec2(m_leftShot->getPosition().x - 20, m_leftShot->getPosition().y + m_leftShot->getContentSize().height),
+		bird->getPosition(), 4, Color4F(255, 255, 255, 1));
+
+	m_drawNode_2->drawSegment(Vec2(m_rightShot->getPosition().x + 20, m_rightShot->getPosition().y + m_rightShot->getContentSize().height),
+		bird->getPosition(), 4, Color4F(255, 255, 255, 1));
 }
 
 void HelloWorld::onTouchEnded(cocos2d::Touch *touch, cocos2d::Event *event)
 {
-    auto endPos = touch->getLocation();
-    auto diff = touchBeginPos - endPos;
+	auto touchEndPos = touch->getLocation();
+	touchEndPos = touchEndPos - this->getPosition();
+	auto endPos = touchEndPos;
+	auto shotTopPos = Vec2(m_leftShot->getPosition().x + 20, m_leftShot->getContentSize().height);
+	auto diff = shotTopPos - endPos;
     auto normal = diff.getNormalized();
     auto length = diff.getLength();
-    m_eraser->SetLinearVelocity(b2Vec2(normal.x * length, normal.y * length));
+    
+
+	auto bird = this->getChildByTag(200 + birdIndex - 1);
+
+	//将小鸟加刚体
+
+	b2BodyDef bodydef;
+
+	bodydef.type = b2_dynamicBody;
+	bodydef.position.Set(touchEndPos.x / PTM_RATIO, touchEndPos.y / PTM_RATIO);
+
+	b2Body*newbird = m_world->CreateBody(&bodydef);
+
+	//定义夹具
+
+	b2PolygonShape birdshap;
+	auto spriteSize = bird->getContentSize();
+	birdshap.SetAsBox(spriteSize.width / 2 / PTM_RATIO, spriteSize.height / 2 / PTM_RATIO);
+
+	//定义盒子的形状
+
+	b2FixtureDef fixturebird;
+
+	fixturebird.shape = &birdshap;
+
+	//设置属性
+
+	fixturebird.density = 10.0;
+
+	fixturebird.friction = 0.3;
+
+	fixturebird.restitution = 0.5;
+
+	newbird->CreateFixture(&fixturebird);
+
+	//最核心的--
+	newbird->SetUserData(bird);//物理世界在物理世界模拟的时候就会根据这个进行坐标的更新和角度的更新
+	//给刚体加力
+	newbird->SetLinearVelocity(b2Vec2(normal.x * length, normal.y * length));
+
+	//隐藏两条线
+
+	m_drawNode_1->setVisible(false);
+
+	m_drawNode_2->setVisible(false);
+
+	m_isShot = true;
 }
 
 
@@ -210,7 +306,7 @@ void HelloWorld::createPhysicsEdge()
 		b2Vec2(size.width * borderScale/PTM_RATIO, size.height * borderScale * 2/PTM_RATIO));
     groundBody->CreateFixture(&groundBox, 0);
     
-    auto bookSprite = Sprite::create("book.png");
+    auto bookSprite = Sprite::create("big_book.png");
     auto spriteSize = bookSprite->getContentSize();
     bookSprite->setPosition(Vec2(size.width/2, spriteSize.height / 2));
     this->addChild(bookSprite);
@@ -230,7 +326,7 @@ void HelloWorld::createPencil()
     
     b2BodyDef pencilDef;
     pencilDef.type = b2_dynamicBody;
-    pencilDef.position.Set(size.width/2/PTM_RATIO, 4.0f);
+    pencilDef.position.Set(size.width/2/PTM_RATIO, 10.0f);
     m_pencilBody = m_world->CreateBody(&pencilDef);
     m_pencilBody->SetUserData(pencilSprite);
     
@@ -241,6 +337,7 @@ void HelloWorld::createPencil()
     pencilFixtureDef.shape = &pencilShape;
     pencilFixtureDef.density = 1.0f;
     pencilFixtureDef.friction = 0.3f;
+	pencilFixtureDef.restitution = 0.5f;
     m_pencilBody->CreateFixture(&pencilFixtureDef);
 }
 
@@ -392,13 +489,14 @@ void HelloWorld::moveRight()
 
 void HelloWorld::resetBody()
 {
-    m_pencilBody->SetTransform(b2Vec2(m_size.width/2/PTM_RATIO, 4.0f), 0);
+    m_pencilBody->SetTransform(b2Vec2(m_size.width/2/PTM_RATIO, 10.0f), 0);
     
     m_eraser->SetTransform(b2Vec2((m_size.width/2 - 50)/PTM_RATIO, 60/PTM_RATIO), 0);
     m_hasWon = false;
     if(m_goodLuck){
         m_goodLuck->setVisible(false);
     }
+	m_isShot = false;
 }
 
 void HelloWorld::goodLuck()
@@ -413,3 +511,25 @@ void HelloWorld::goodLuck()
 }
 
 
+void HelloWorld::initSlingshot()
+{
+
+	m_leftShot = Sprite::create("leftshot.png");
+	m_leftShot->setPosition(Vec2(m_size.width / 2 - 100, 0));
+	m_leftShot->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+	this->addChild(m_leftShot);
+
+	m_rightShot = Sprite::create("rightshot.png");
+	m_rightShot->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+	m_rightShot->setPosition(Vec2(m_size.width / 2 - 80, 0));
+	this->addChild(m_rightShot);
+
+	m_drawNode_1 = DrawNode::create();
+	m_drawNode_1->setVisible(false);
+	this->addChild(m_drawNode_1);
+
+	m_drawNode_2 = DrawNode::create();
+	this->addChild(m_drawNode_2);
+	m_drawNode_2->setVisible(false);
+
+}
